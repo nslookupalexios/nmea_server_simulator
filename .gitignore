@@ -69,3 +69,6 @@ Makefile
 
 # Local tooling metadata
 .codex
+
+# Static analysis artifacts
+*.dump

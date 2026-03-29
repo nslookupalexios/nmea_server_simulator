@@ -10,6 +10,7 @@ for GNSS testing, localization pipelines, and controlled simulation workflows.
 - Single-client TCP streaming server
 - Configurable static GNSS parameters
 - Fixed-period transmission loop using POSIX `usleep()`
+- Random injection of spurious non-ASCII bytes between consecutive sentences
 - No dynamic memory allocation
 
 ## Project layout
@@ -59,11 +60,17 @@ The initial implementation uses static values defined in `src/main.c`:
 - Geoid separation: `47.0 m`
 - Transmission period: `1000 ms`
 - TCP port: `5000`
+- Spurious bytes minimum length: `1`
+- Spurious bytes maximum length: `6`
 
 ## Notes
 
 - The server accepts one client at a time.
 - When the client disconnects, the server returns to `accept()` and waits for a new
   connection.
+- The current implementation injects a pseudo-random sequence of non-ASCII bytes
+  in the range `0x80..0xFF` between one NMEA sentence and the next.
+- The spurious sequence length is configurable and currently defaults to a random
+  value between `1` and `6` bytes.
 - The current version generates static coordinates only and is intended as a clean
   baseline for future replay, trajectory, and fault-injection extensions.
