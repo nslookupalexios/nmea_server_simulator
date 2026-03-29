@@ -69,7 +69,7 @@ static nmea_server_status_t nmea_server_build_gga_sentence(const nmea_server_con
                                                            size_t buffer_size)
 {
     nmea_server_status_t status = NMEA_SERVER_STATUS_ERROR;
-    char utc_time[7];
+    char utc_time[10];
     char latitude_buffer[16];
     char longitude_buffer[16];
     char payload[NMEA_SERVER_SENTENCE_MAX_LENGTH];
@@ -302,17 +302,27 @@ static uint8_t nmea_compute_checksum(const char *payload)
 static nmea_server_status_t nmea_get_utc_time(char *buffer, size_t buffer_size)
 {
     nmea_server_status_t status = NMEA_SERVER_STATUS_ERROR;
-    time_t current_time;
+    struct timeval current_time;
     struct tm current_tm;
+    unsigned int centiseconds;
+    int length;
 
-    if ((buffer != NULL) && (buffer_size >= 7U))
+    if ((buffer != NULL) && (buffer_size >= 10U))
     {
-        current_time = time(NULL);
-        if (current_time != (time_t)-1)
+        if (gettimeofday(&current_time, NULL) == 0)
         {
-            if (gmtime_r(&current_time, &current_tm) != NULL)
+            if (gmtime_r(&current_time.tv_sec, &current_tm) != NULL)
             {
-                if (strftime(buffer, buffer_size, "%H%M%S", &current_tm) > 0U)
+                centiseconds = (unsigned int)(current_time.tv_usec / 10000L);
+                length = snprintf(buffer,
+                                  buffer_size,
+                                  "%02d%02d%02d.%02u",
+                                  current_tm.tm_hour,
+                                  current_tm.tm_min,
+                                  current_tm.tm_sec,
+                                  centiseconds);
+
+                if ((length > 0) && ((size_t)length < buffer_size))
                 {
                     status = NMEA_SERVER_STATUS_SUCCESS;
                 }
